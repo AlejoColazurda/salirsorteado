@@ -206,7 +206,12 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     const animate = () => {
       if (angularVelocityRef.current > 0.002) {
         rotationRef.current += angularVelocityRef.current;
-        angularVelocityRef.current *= 0.985; // friction
+        // Suspense physics curve
+        if (angularVelocityRef.current > 0.05) {
+          angularVelocityRef.current *= 0.988; // Slow down gradually (build suspense)
+        } else {
+          angularVelocityRef.current *= 0.975; // Stop quicker once it gets very slow
+        }
 
         // Tick sound when pointer crosses segments
         const itemsCount = participants.length > 0 ? participants.length : 1;
