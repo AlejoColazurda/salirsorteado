@@ -7,6 +7,9 @@ interface SpinWheelProps {
   roles: string[];
   drawName: string;
   onSpinEnd: (results: { participantName: string; role: string }[]) => void;
+  isMultiplayer?: boolean;
+  canISpin?: boolean;
+  onTriggerRemoteSpin?: (speed: number, winnerIndex: number) => void;
 }
 
 export const SpinWheel: React.FC<SpinWheelProps> = ({
@@ -14,6 +17,9 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   roles,
   drawName,
   onSpinEnd,
+  isMultiplayer = false,
+  canISpin = true,
+  onTriggerRemoteSpin,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -233,6 +239,43 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     ctx.restore();
   };
 
+  // Synchronized remote spin listener
+  useEffect(() => {
+    if (!isMultiplayer) return;
+
+    const handleRemoteSpin = (e: Event) => {
+      const customEvent = e as CustomEvent<{ speed: number; winnerIndex: number }>;
+      const { winnerIndex } = customEvent.detail;
+
+      // Calculate target angle based on winnerIndex
+      const sectorAngle = (2 * Math.PI) / participants.length;
+      
+      // Target angle at 12 o'clock for winnerIndex is (1.5 * Math.PI - (winnerIndex + 0.5) * sectorAngle)
+      const targetStopAngle = (1.5 * Math.PI - (winnerIndex + 0.5) * sectorAngle) % (2 * Math.PI);
+      
+      let currentMod = rotationRef.current % (2 * Math.PI);
+      if (currentMod < 0) currentMod += 2 * Math.PI;
+
+      let targetMod = targetStopAngle % (2 * Math.PI);
+      if (targetMod < 0) targetMod += 2 * Math.PI;
+
+      let diff = targetMod - currentMod;
+      if (diff < 0) diff += 2 * Math.PI;
+
+      const totalRotation = diff + 6 * 2 * Math.PI; // at least 6 turns
+      
+      setWinner(null);
+      setIsSpinning(true);
+      angularVelocityRef.current = totalRotation * (1 - 0.991);
+      getAudioContext();
+    };
+
+    window.addEventListener('remote-spin', handleRemoteSpin);
+    return () => {
+      window.removeEventListener('remote-spin', handleRemoteSpin);
+    };
+  }, [isMultiplayer, participants]);
+
   // Spin animation loop
   useEffect(() => {
     let animId: number;
@@ -242,13 +285,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
       if (!isDraggingRef.current) {
         if (angularVelocityRef.current > 0.002) {
           rotationRef.current += angularVelocityRef.current;
-          
-          // Suspense physics deceleration curve
-          if (angularVelocityRef.current > 0.05) {
-            angularVelocityRef.current *= 0.991; // Slow down gradually (build suspense)
-          } else {
-            angularVelocityRef.current *= 0.978; // Stop quicker once it gets very slow
-          }
+          angularVelocityRef.current *= 0.991; // Constant decay for mathematical precision
 
           // Tick sound when pointer crosses segments
           const itemsCount = participants.length > 0 ? participants.length : 1;
@@ -298,8 +335,6 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     const index = Math.floor(targetAngle / sectorAngle) % participants.length;
 
     const winnerName = participants[index];
-
-    // Assign roles
     const primaryRole = roles.length > 0 ? roles[0] : 'Sorteado';
 
     const results = [{ participantName: winnerName, role: primaryRole }];
@@ -318,15 +353,20 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   };
 
   const handleSpinStart = () => {
-    if (isSpinning || participants.length === 0) return;
+    if (isSpinning || participants.length === 0 || (isMultiplayer && !canISpin)) return;
     
     getAudioContext();
-
     setWinner(null);
     setIsSpinning(true);
     
-    // Set a high initial angular velocity
-    angularVelocityRef.current = 0.55 + Math.random() * 0.35;
+    const initialVelocity = 0.55 + Math.random() * 0.35;
+
+    if (isMultiplayer && onTriggerRemoteSpin) {
+      const winnerIndex = Math.floor(Math.random() * participants.length);
+      onTriggerRemoteSpin(initialVelocity, winnerIndex);
+    } else {
+      angularVelocityRef.current = initialVelocity;
+    }
   };
 
   // Dragging event handlers helper
@@ -356,7 +396,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   };
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
-    if (participants.length === 0 || winner !== null || isSpinning) return;
+    if (participants.length === 0 || winner !== null || isSpinning || (isMultiplayer && !canISpin)) return;
     
     const coords = getCoordinatesFromEvent(e);
     if (!coords) return;
@@ -428,22 +468,39 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     const track = velocityTrackerRef.current;
     if (track.length > 0) {
       const avgVelocityMs = track.reduce((a, b) => a + b, 0) / track.length;
-      
-      // Convert to frames velocity (assuming roughly 60fps, 16.6ms per frame)
       const avgVelocityFrame = avgVelocityMs * 16.66;
       
       // Filter out micro-drags
       if (Math.abs(avgVelocityFrame) > 0.005) {
-        // Boost velocity slightly for a dynamic spin release and set limits
-        const speedBoost = avgVelocityFrame * 1.5;
-        angularVelocityRef.current = Math.min(Math.max(speedBoost, -0.95), 0.95);
-        setIsSpinning(true);
+        let speedBoost = Math.min(Math.max(avgVelocityFrame * 1.5, -0.95), 0.95);
+        let finalRotationOffset = speedBoost * 0.991 / (1 - 0.991);
+        
+        // Enforce 1 full turn (2 * Math.PI) minimum to land on a selection
+        const minRotation = 2 * Math.PI;
+        if (Math.abs(finalRotationOffset) < minRotation) {
+          const direction = finalRotationOffset >= 0 ? 1 : -1;
+          finalRotationOffset = direction * minRotation;
+          speedBoost = (finalRotationOffset * (1 - 0.991)) / 0.991;
+        }
+
+        if (isMultiplayer && onTriggerRemoteSpin) {
+          const targetStopAngle = (rotationRef.current + finalRotationOffset) % (2 * Math.PI);
+          let targetAngle = (1.5 * Math.PI - targetStopAngle) % (2 * Math.PI);
+          if (targetAngle < 0) targetAngle += 2 * Math.PI;
+          const sectorAngle = (2 * Math.PI) / participants.length;
+          const winnerIndex = Math.floor(targetAngle / sectorAngle) % participants.length;
+
+          onTriggerRemoteSpin(Math.abs(speedBoost), winnerIndex);
+        } else {
+          angularVelocityRef.current = speedBoost;
+          setIsSpinning(true);
+        }
         return;
       }
     }
 
-    // If drag released without significant speed, just settle and select
-    determineWinner();
+    // Snapped drag without speed release -> no winner drawn, just snap back
+    drawWheel();
   };
 
   return (
@@ -466,7 +523,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
       </div>
 
       {/* Canvas container with pointer indicator */}
-      <div className="relative flex items-center justify-center p-4">
+      <div className="relative flex items-center justify-center p-4 w-full max-w-[350px] mx-auto">
         {/* CSS 3D Glassliquid container border shadow */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-white/40 dark:from-white/5 dark:to-white/10 border border-white/30 dark:border-white/10 shadow-[inset_0_4px_16px_rgba(255,255,255,0.4),0_24px_48px_-12px_rgba(0,0,0,0.15)] pointer-events-none" />
         
@@ -474,7 +531,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         <div 
           className="absolute z-30" 
           style={{
-            top: '6px',
+            top: '8px',
             left: '50%',
             transform: pointerFlick ? 'translateX(-50%) rotate(-18deg)' : 'translateX(-50%) rotate(0deg)',
             transformOrigin: '50% 0%',
