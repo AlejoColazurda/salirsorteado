@@ -29,6 +29,12 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   const angularVelocityRef = useRef(0);
   const lastTickAngleRef = useRef(0);
 
+  // Dragging interaction states (Refs to prevent state-change lag during dragging)
+  const isDraggingRef = useRef(false);
+  const lastAngleRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const velocityTrackerRef = useRef<number[]>([]);
+
   const getAudioContext = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -50,18 +56,18 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      // Cute wooden-like pointer clicking sound
+      // Wooden needle clicking click sound
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(600 * frequencyMultiplier, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100 * frequencyMultiplier, ctx.currentTime + 0.05);
 
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
 
       osc.start();
       osc.stop(ctx.currentTime + 0.06);
     } catch (e) {
-      console.error(e);
+      // Audio errors ignored
     }
   };
 
@@ -85,7 +91,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
       osc.start();
       osc.stop(ctx.currentTime + 0.6);
     } catch (e) {
-      console.error(e);
+      // Audio errors ignored
     }
   };
 
@@ -232,40 +238,43 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     let animId: number;
 
     const animate = () => {
-      if (angularVelocityRef.current > 0.002) {
-        rotationRef.current += angularVelocityRef.current;
-        // Suspense physics curve
-        if (angularVelocityRef.current > 0.05) {
-          angularVelocityRef.current *= 0.991; // Slow down gradually (build suspense)
-        } else {
-          angularVelocityRef.current *= 0.978; // Stop quicker once it gets very slow
-        }
-
-        // Tick sound when pointer crosses segments
-        const itemsCount = participants.length > 0 ? participants.length : 1;
-        const segmentAngle = (2 * Math.PI) / itemsCount;
-        const currentProgress = rotationRef.current / segmentAngle;
-        
-        if (Math.floor(currentProgress) !== Math.floor(lastTickAngleRef.current)) {
-          // Pitch changes slightly depending on speed
-          playTickSound(Math.min(1.5, 0.6 + angularVelocityRef.current * 3));
-          lastTickAngleRef.current = currentProgress;
+      // Only animate if the user is not actively dragging the wheel
+      if (!isDraggingRef.current) {
+        if (angularVelocityRef.current > 0.002) {
+          rotationRef.current += angularVelocityRef.current;
           
-          // Visual needle click/flick animation
-          setPointerFlick(true);
-          setTimeout(() => setPointerFlick(false), 50);
-        }
+          // Suspense physics deceleration curve
+          if (angularVelocityRef.current > 0.05) {
+            angularVelocityRef.current *= 0.991; // Slow down gradually (build suspense)
+          } else {
+            angularVelocityRef.current *= 0.978; // Stop quicker once it gets very slow
+          }
 
-        drawWheel();
-        animId = requestAnimationFrame(animate);
-      } else if (isSpinning) {
-        setIsSpinning(false);
-        angularVelocityRef.current = 0;
-        determineWinner();
+          // Tick sound when pointer crosses segments
+          const itemsCount = participants.length > 0 ? participants.length : 1;
+          const segmentAngle = (2 * Math.PI) / itemsCount;
+          const currentProgress = rotationRef.current / segmentAngle;
+          
+          if (Math.floor(currentProgress) !== Math.floor(lastTickAngleRef.current)) {
+            playTickSound(Math.min(1.5, 0.6 + angularVelocityRef.current * 3));
+            lastTickAngleRef.current = currentProgress;
+            
+            // Visual needle click/flick animation
+            setPointerFlick(true);
+            setTimeout(() => setPointerFlick(false), 50);
+          }
+
+          drawWheel();
+          animId = requestAnimationFrame(animate);
+        } else if (isSpinning) {
+          setIsSpinning(false);
+          angularVelocityRef.current = 0;
+          determineWinner();
+        }
       }
     };
 
-    if (isSpinning) {
+    if (isSpinning && !isDraggingRef.current) {
       animId = requestAnimationFrame(animate);
     }
 
@@ -290,9 +299,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
     const winnerName = participants[index];
 
-    // Assign roles. For multiple roles or a single person:
-    // If we have multiple roles, we can assign the selected participant to the first role,
-    // or if we have one main role, assign that.
+    // Assign roles
     const primaryRole = roles.length > 0 ? roles[0] : 'Sorteado';
 
     const results = [{ participantName: winnerName, role: primaryRole }];
@@ -313,7 +320,6 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   const handleSpinStart = () => {
     if (isSpinning || participants.length === 0) return;
     
-    // Trigger audio initialization
     getAudioContext();
 
     setWinner(null);
@@ -321,6 +327,123 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     
     // Set a high initial angular velocity
     angularVelocityRef.current = 0.55 + Math.random() * 0.35;
+  };
+
+  // Dragging event handlers helper
+  const getCoordinatesFromEvent = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let clientX = 0;
+    let clientY = 0;
+
+    if ('touches' in e) {
+      if (e.touches.length === 0) return null;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    return {
+      x: clientX - centerX,
+      y: clientY - centerY,
+    };
+  };
+
+  const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
+    if (participants.length === 0) return;
+    
+    const coords = getCoordinatesFromEvent(e);
+    if (!coords) return;
+
+    getAudioContext();
+    setWinner(null);
+
+    // Stop active spins on drag
+    setIsSpinning(false);
+    angularVelocityRef.current = 0;
+
+    const angle = Math.atan2(coords.y, coords.x);
+    isDraggingRef.current = true;
+    lastAngleRef.current = angle;
+    lastTimeRef.current = performance.now();
+    velocityTrackerRef.current = [];
+  };
+
+  const moveDrag = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDraggingRef.current) return;
+
+    const coords = getCoordinatesFromEvent(e);
+    if (!coords) return;
+
+    const currentAngle = Math.atan2(coords.y, coords.x);
+    let delta = currentAngle - lastAngleRef.current;
+
+    // Handle wrap-around
+    if (delta > Math.PI) delta -= 2 * Math.PI;
+    if (delta < -Math.PI) delta += 2 * Math.PI;
+
+    // Update rotation
+    rotationRef.current += delta;
+
+    // Track velocity
+    const now = performance.now();
+    const dt = now - lastTimeRef.current;
+    if (dt > 0) {
+      const velocity = delta / dt; // Radians per millisecond
+      velocityTrackerRef.current.push(velocity);
+      if (velocityTrackerRef.current.length > 5) {
+        velocityTrackerRef.current.shift();
+      }
+    }
+
+    // Tick sound on drag
+    const itemsCount = participants.length > 0 ? participants.length : 1;
+    const segmentAngle = (2 * Math.PI) / itemsCount;
+    const currentProgress = rotationRef.current / segmentAngle;
+    
+    if (Math.floor(currentProgress) !== Math.floor(lastTickAngleRef.current)) {
+      playTickSound(0.8);
+      lastTickAngleRef.current = currentProgress;
+      setPointerFlick(true);
+      setTimeout(() => setPointerFlick(false), 50);
+    }
+
+    drawWheel();
+
+    lastAngleRef.current = currentAngle;
+    lastTimeRef.current = now;
+  };
+
+  const endDrag = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    // Calculate average velocity from the last few drag frame movements
+    const track = velocityTrackerRef.current;
+    if (track.length > 0) {
+      const avgVelocityMs = track.reduce((a, b) => a + b, 0) / track.length;
+      
+      // Convert to frames velocity (assuming roughly 60fps, 16.6ms per frame)
+      const avgVelocityFrame = avgVelocityMs * 16.66;
+      
+      // Filter out micro-drags
+      if (Math.abs(avgVelocityFrame) > 0.005) {
+        // Boost velocity slightly for a dynamic spin release and set limits
+        const speedBoost = avgVelocityFrame * 1.5;
+        angularVelocityRef.current = Math.min(Math.max(speedBoost, -0.95), 0.95);
+        setIsSpinning(true);
+        return;
+      }
+    }
+
+    // If drag released without significant speed, just settle and select
+    determineWinner();
   };
 
   return (
@@ -347,6 +470,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         {/* CSS 3D Glassliquid container border shadow */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-white/40 dark:from-white/5 dark:to-white/10 border border-white/30 dark:border-white/10 shadow-[inset_0_4px_16px_rgba(255,255,255,0.4),0_24px_48px_-12px_rgba(0,0,0,0.15)] pointer-events-none" />
         
+        {/* Sleek fixed arrow pointing down from the top */}
         <div 
           className="absolute z-30" 
           style={{
@@ -374,12 +498,19 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
           ref={canvasRef}
           width={350}
           height={350}
-          className="relative z-10 transition-transform"
+          className="relative z-10 transition-transform cursor-grab active:cursor-grabbing"
           style={{
             maxWidth: '100%',
             height: 'auto',
             touchAction: 'none',
           }}
+          onMouseDown={startDrag}
+          onMouseMove={moveDrag}
+          onMouseUp={endDrag}
+          onMouseLeave={endDrag}
+          onTouchStart={startDrag}
+          onTouchMove={moveDrag}
+          onTouchEnd={endDrag}
         />
 
         {/* Floating Center Spin Button */}
