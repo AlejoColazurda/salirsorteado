@@ -118,7 +118,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 fade-in max-w-[500px] mx-auto">
+    <div className="flex flex-col gap-8 fade-in w-full">
       {/* Visual Step Indicator (iOS Style Segmented Control Indicator) */}
       <div className="flex items-center justify-between px-4 pb-2 border-b border-white/10 relative">
         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 z-0" />
