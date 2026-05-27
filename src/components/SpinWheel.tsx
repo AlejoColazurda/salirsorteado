@@ -235,9 +235,9 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         rotationRef.current += angularVelocityRef.current;
         // Suspense physics curve
         if (angularVelocityRef.current > 0.05) {
-          angularVelocityRef.current *= 0.988; // Slow down gradually (build suspense)
+          angularVelocityRef.current *= 0.991; // Slow down gradually (build suspense)
         } else {
-          angularVelocityRef.current *= 0.975; // Stop quicker once it gets very slow
+          angularVelocityRef.current *= 0.978; // Stop quicker once it gets very slow
         }
 
         // Tick sound when pointer crosses segments
@@ -318,7 +318,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     setIsSpinning(true);
     
     // Set a high initial angular velocity
-    angularVelocityRef.current = 0.35 + Math.random() * 0.25;
+    angularVelocityRef.current = 0.55 + Math.random() * 0.35;
   };
 
   return (
@@ -345,9 +345,26 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         {/* CSS 3D Glassliquid container border shadow */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-white/40 dark:from-white/5 dark:to-white/10 border border-white/30 dark:border-white/10 shadow-[inset_0_4px_16px_rgba(255,255,255,0.4),0_24px_48px_-12px_rgba(0,0,0,0.15)] pointer-events-none" />
         
-        {/* iOS style Top Indicator Triangle */}
-        <div className="absolute -top-1 z-30 drop-shadow-md">
-          <div className="w-6 h-6 bg-gradient-to-b from-red-500 to-red-600 rounded-b-md shadow-lg" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }} />
+        {/* Sleek fixed arrow pointing down from the top */}
+        <div 
+          className="absolute z-30" 
+          style={{
+            top: '-14px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            filter: 'drop-shadow(0 6px 12px rgba(255, 59, 48, 0.5))',
+            pointerEvents: 'none'
+          }}
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21L3 9H9V3H15V9H21L12 21Z" fill="url(#pointer-gradient)" stroke="#ffffff" strokeWidth="2.5" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="pointer-gradient" x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#ff453a" />
+                <stop offset="1" stopColor="#ff2d55" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
 
         <canvas
