@@ -43,6 +43,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   const [customDesc, setCustomDesc] = useState('');
   const [customRoles, setCustomRoles] = useState<string[]>(['Ronda 1']);
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const [hasMultipleDraws, setHasMultipleDraws] = useState<boolean>(true);
 
   const activeParticipants = participants.filter((p) => p.active);
 
@@ -310,53 +311,112 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
 
           {/* Config Builder for Customizer */}
           {isCustomizing ? (
-            <div className="glass-panel p-4 bg-white/40 dark:bg-black/20 flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                  Nombre del Sorteo
-                </label>
-                <div className="ios-input-group">
-                  <input
-                    type="text"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    className="ios-input font-bold"
-                  />
+            <div className="flex flex-col gap-4">
+              {/* Question: Habrá más de un sorteo? */}
+              <div className="glass-panel p-5 bg-white/40 dark:bg-black/20 flex flex-col gap-4 text-left">
+                <span className="text-sm font-bold text-slate-800 dark:text-white">
+                  ¿Habrá más de un sorteo en esta sesión?
+                </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHasMultipleDraws(false);
+                      setCustomRoles(['Ganador/a']);
+                    }}
+                    className={`p-3 rounded-2xl border font-bold text-xs transition-all ios-clickable ${
+                      !hasMultipleDraws
+                        ? 'bg-blue-500/15 border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'bg-white/40 border-white/10 text-slate-500 dark:bg-black/20 dark:border-white/5 dark:text-slate-500'
+                    }`}
+                  >
+                    No, solo 1 sorteo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHasMultipleDraws(true);
+                      setCustomRoles(['Primera Ronda', 'Segunda Ronda']);
+                    }}
+                    className={`p-3 rounded-2xl border font-bold text-xs transition-all ios-clickable ${
+                      hasMultipleDraws
+                        ? 'bg-blue-500/15 border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'bg-white/40 border-white/10 text-slate-500 dark:bg-black/20 dark:border-white/5 dark:text-slate-500'
+                    }`}
+                  >
+                    Sí, múltiples rondas
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex justify-between items-center">
-                  <span>Rondas del Sorteo</span>
-                  <button
-                    onClick={handleAddRole}
-                    className="text-xs text-blue-500 font-bold flex items-center gap-0.5"
-                  >
-                    <Plus size={14} /> Añadir Ronda
-                  </button>
-                </label>
+              {/* Sub-form */}
+              <div className="glass-panel p-5 bg-white/40 dark:bg-black/20 flex flex-col gap-4 text-left">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Nombre del Sorteo
+                  </label>
+                  <div className="ios-input-group">
+                    <input
+                      type="text"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      className="ios-input font-bold"
+                    />
+                  </div>
+                </div>
 
-                {customRoles.map((role, idx) => (
-                  <div key={idx} className="flex gap-2 items-center fade-in">
-                    <span className="text-xs font-bold text-slate-400 w-5">#{idx + 1}</span>
-                    <div className="ios-input-group flex-1">
+                {hasMultipleDraws ? (
+                  <div className="flex flex-col gap-3">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex justify-between items-center">
+                      <span>Rondas del Sorteo</span>
+                      <button
+                        type="button"
+                        onClick={handleAddRole}
+                        className="text-xs text-blue-500 font-bold flex items-center gap-0.5"
+                      >
+                        <Plus size={14} /> Añadir Ronda
+                      </button>
+                    </label>
+
+                    {customRoles.map((role, idx) => (
+                      <div key={idx} className="flex gap-2 items-center fade-in">
+                        <span className="text-xs font-bold text-slate-400 w-5">#{idx + 1}</span>
+                        <div className="ios-input-group flex-1">
+                          <input
+                            type="text"
+                            value={role}
+                            onChange={(e) => handleRoleChange(idx, e.target.value)}
+                            className="ios-input"
+                          />
+                        </div>
+                        {customRoles.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRole(idx)}
+                            className="p-2 text-rose-500/80 hover:bg-rose-500/10 rounded-full"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                      Rol o Concepto a Sortear
+                    </label>
+                    <div className="ios-input-group">
                       <input
                         type="text"
-                        value={role}
-                        onChange={(e) => handleRoleChange(idx, e.target.value)}
+                        value={customRoles[0] || ''}
+                        onChange={(e) => handleRoleChange(0, e.target.value)}
+                        placeholder="Ej. Ganador/a, Lavar platos"
                         className="ios-input"
                       />
                     </div>
-                    {customRoles.length > 1 && (
-                      <button
-                        onClick={() => handleRemoveRole(idx)}
-                        className="p-2 text-rose-500/80 hover:bg-rose-500/10 rounded-full"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           ) : (
