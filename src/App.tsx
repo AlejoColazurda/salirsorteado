@@ -214,7 +214,7 @@ export default function App() {
       <header className="ios-nav-bar glass-panel rounded-none border-t-0 border-x-0 border-b bg-white/70 dark:bg-black/70 px-6">
         <div className="flex items-center gap-2">
           <Sparkles className="text-blue-500 animate-pulse" size={24} />
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white">
+          <h1 className="text-xl font-extrabold tracking-tight siri-glow-text">
             Salir Sorteado
           </h1>
         </div>

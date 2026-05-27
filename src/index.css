@@ -5,29 +5,20 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: dark;
   
-  /* iOS Liquid Premium Variables */
-  --ios-bg-light: #f5f5f7;
-  --ios-bg-dark: #000000;
+  /* WWDC 2025 Dynamic Colors */
+  --apple-bg: #09090b;
+  --apple-card-bg: rgba(18, 18, 20, 0.6);
+  --apple-border: rgba(255, 255, 255, 0.08);
+  --apple-accent: #2f80ed;
   
-  --ios-card-bg-light: rgba(255, 255, 255, 0.45);
-  --ios-card-bg-dark: rgba(22, 22, 23, 0.6);
-  
-  --ios-border-light: rgba(255, 255, 255, 0.5);
-  --ios-border-dark: rgba(255, 255, 255, 0.12);
-
-  --ios-accent: #007aff;
-  --ios-accent-rgb: 0, 122, 255;
-  --ios-accent-gradient: linear-gradient(135deg, #007aff, #00c6ff);
-  --ios-purple-gradient: linear-gradient(135deg, #af52de, #f355da);
-  --ios-emerald-gradient: linear-gradient(135deg, #34c759, #30e8a2);
-  --ios-glass-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Siri-glow spectrum */
+  --siri-pink: #ff375f;
+  --siri-purple: #bf5af2;
+  --siri-blue: #0a84ff;
+  --siri-cyan: #30d158;
+  --siri-orange: #ff9f0a;
 }
 
 * {
@@ -43,19 +34,12 @@ body {
   width: 100vw;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: var(--ios-bg-light);
-  color: #1d1d1f;
-  transition: background-color 0.4s ease, color 0.4s ease;
+  background-color: var(--apple-bg);
+  color: #f5f5f7;
+  font-family: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: var(--ios-bg-dark);
-    color: #f5f5f7;
-  }
-}
-
-/* Enhanced Moving Liquid Background */
+/* WWDC 2025 Floating Mesh Background */
 .liquid-bg-container {
   position: fixed;
   top: 0;
@@ -70,89 +54,88 @@ body {
 .liquid-circle {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.8;
-  mix-blend-mode: multiply;
-  animation: float 22s infinite alternate ease-in-out;
-}
-
-@media (prefers-color-scheme: dark) {
-  .liquid-circle {
-    opacity: 0.45;
-    mix-blend-mode: screen;
-    filter: blur(140px);
-  }
+  filter: blur(140px);
+  opacity: 0.6;
+  animation: floatMesh 25s infinite alternate ease-in-out;
 }
 
 .circle-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.45) 0%, rgba(10, 132, 255, 0) 70%);
-  top: -15%;
-  left: -15%;
-  animation-duration: 18s;
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, rgba(10, 132, 255, 0.5) 0%, rgba(10, 132, 255, 0) 70%);
+  top: -20%;
+  left: -10%;
+  animation-duration: 20s;
 }
 
 .circle-2 {
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(175, 82, 222, 0.4) 0%, rgba(175, 82, 222, 0) 70%);
-  bottom: -15%;
-  right: -15%;
-  animation-duration: 25s;
-  animation-delay: -4s;
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(circle, rgba(191, 90, 242, 0.45) 0%, rgba(191, 90, 242, 0) 70%);
+  bottom: -20%;
+  right: -10%;
+  animation-duration: 30s;
+  animation-delay: -5s;
 }
 
 .circle-3 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255, 45, 85, 0.35) 0%, rgba(255, 45, 85, 0) 70%);
-  top: 35%;
-  left: 30%;
-  animation-duration: 21s;
-  animation-delay: -10s;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(255, 55, 95, 0.35) 0%, rgba(255, 55, 95, 0) 70%);
+  top: 30%;
+  left: 25%;
+  animation-duration: 24s;
+  animation-delay: -12s;
 }
 
-@keyframes float {
+@keyframes floatMesh {
   0% {
-    transform: translate(0px, 0px) rotate(0deg) scale(1);
+    transform: translate(0, 0) scale(1) rotate(0deg);
   }
   50% {
-    transform: translate(80px, 120px) rotate(180deg) scale(1.25);
+    transform: translate(60px, 80px) scale(1.15) rotate(180deg);
   }
   100% {
-    transform: translate(-60px, -40px) rotate(360deg) scale(0.85);
+    transform: translate(-40px, -50px) scale(0.9) rotate(360deg);
   }
 }
 
-/* Glassmorphism Elements with High-End Refracion */
+/* Siri Glow Border Card (WWDC 2025 Style) */
 .glass-panel {
-  background: var(--ios-card-bg-light);
-  backdrop-filter: blur(40px) saturate(220%);
-  -webkit-backdrop-filter: blur(40px) saturate(220%);
-  border: 1px solid var(--ios-border-light);
-  border-radius: 24px;
+  position: relative;
+  background: var(--apple-card-bg);
+  backdrop-filter: blur(50px) saturate(240%);
+  -webkit-backdrop-filter: blur(50px) saturate(240%);
+  border-radius: 28px;
+  padding: 24px;
+  
+  /* Double border effect using mask/gradient */
+  border: 1px solid transparent;
+  background-clip: padding-box;
   box-shadow: 
-    0 12px 40px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.05);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    0 24px 64px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass-panel {
-    background: var(--ios-card-bg-dark);
-    border: 1px solid var(--ios-border-dark);
-    box-shadow: 
-      0 12px 40px 0 rgba(0, 0, 0, 0.45),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
-  }
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px; bottom: -1px; left: -1px; right: -1px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.1));
+  z-index: -1;
+  pointer-events: none;
 }
 
-/* Active touch feedback */
+/* active card glowing effect */
+.glass-panel-active::before {
+  background: linear-gradient(135deg, var(--siri-blue), var(--siri-purple), var(--siri-pink));
+  opacity: 0.85;
+}
+
+/* iOS Clickable Actions */
 .ios-clickable {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, box-shadow 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.25s ease;
   cursor: pointer;
 }
 .ios-clickable:active {
@@ -160,7 +143,7 @@ body {
   opacity: 0.85;
 }
 
-/* iOS Layout Navigation */
+/* iOS Navigation & Headers */
 .ios-nav-bar {
   position: sticky;
   top: 0;
@@ -169,16 +152,11 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  height: 64px;
-  border-bottom: 1px solid var(--ios-border-light);
-  background: rgba(255, 255, 255, 0.65);
-}
-
-@media (prefers-color-scheme: dark) {
-  .ios-nav-bar {
-    border-bottom: 1px solid var(--ios-border-dark);
-    background: rgba(0, 0, 0, 0.65);
-  }
+  height: 68px;
+  background: rgba(9, 9, 11, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-bottom: 1px solid var(--apple-border);
 }
 
 .ios-tab-bar {
@@ -187,26 +165,18 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
-  max-width: 460px;
-  height: 68px;
-  border-radius: 34px;
+  max-width: 440px;
+  height: 72px;
+  border-radius: 36px;
   z-index: 99;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  border: 1px solid var(--ios-border-light);
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(35px) saturate(210%);
-  -webkit-backdrop-filter: blur(35px) saturate(210%);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  .ios-tab-bar {
-    border: 1px solid var(--ios-border-dark);
-    background: rgba(20, 20, 21, 0.75);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  }
+  border: 1px solid var(--apple-border);
+  background: rgba(18, 18, 20, 0.75);
+  backdrop-filter: blur(40px) saturate(210%);
+  -webkit-backdrop-filter: blur(40px) saturate(210%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
 }
 
 .ios-tab-item {
@@ -226,93 +196,95 @@ body {
 }
 
 .ios-tab-item.active {
-  color: var(--ios-accent);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .ios-tab-icon {
-  margin-bottom: 2px;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-bottom: 3px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ios-tab-item.active .ios-tab-icon {
-  transform: scale(1.15) translateY(-2px);
+  transform: scale(1.15);
+  color: var(--siri-blue);
 }
 
-/* General Layout Main Content */
+/* Spacing and responsive container */
 .ios-main-content {
-  padding: 24px 16px 140px 16px;
-  max-width: 520px;
+  padding: 32px 16px 140px 16px;
+  max-width: 500px;
   margin: 0 auto;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 68px);
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 32px;
 }
 
-/* iOS Inputs & Buttons (Refined Glass Details) */
+/* Siri Glow Buttons & Inputs */
 .ios-input-group {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(120, 120, 128, 0.08);
-  border: 1px solid rgba(120, 120, 128, 0.08);
-  border-radius: 16px;
-  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px 18px;
   transition: all 0.3s ease;
 }
 
 .ios-input-group:focus-within {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 122, 255, 0.3);
-  box-shadow: 0 0 12px rgba(0, 122, 255, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  .ios-input-group:focus-within {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(10, 132, 255, 0.3);
-  }
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--siri-blue);
+  box-shadow: 0 0 16px rgba(10, 132, 255, 0.25);
 }
 
 .ios-input {
   flex: 1;
   border: none;
   background: transparent;
-  color: inherit;
+  color: #ffffff;
   font-family: inherit;
   font-size: 16px;
   outline: none;
 }
 
 .ios-button-primary {
-  background: var(--ios-accent-gradient);
+  background: linear-gradient(135deg, var(--siri-blue), var(--siri-purple));
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 14px 28px;
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
-  box-shadow: 
-    0 8px 24px rgba(0, 122, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 32px rgba(10, 132, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
 }
 
-.ios-button-primary:hover {
-  box-shadow: 
-    0 12px 28px rgba(0, 122, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+.ios-button-primary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.ios-button-primary:hover::after {
+  transform: translateX(100%);
 }
 
 .ios-button-secondary {
-  background: rgba(120, 120, 128, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--ios-accent);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border-radius: 18px;
   padding: 14px 28px;
   font-family: inherit;
   font-size: 16px;
@@ -323,39 +295,18 @@ body {
   gap: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .ios-button-secondary {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
+/* Siri Glow Effect for headings */
+.siri-glow-text {
+  background: linear-gradient(90deg, #007aff, #bf5af2, #ff2d55, #007aff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: siriGlowAnimation 8s linear infinite;
 }
 
-/* Animations */
-.fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(120, 120, 128, 0.3);
-  border-radius: 3px;
+@keyframes siriGlowAnimation {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
 }
 
 /* ==========================================
@@ -381,7 +332,7 @@ body {
 
 /* Dynamic Gaps */
 .gap-1\.5 { gap: 6px !important; }
-.gap-2 { gap: 12px !important; } /* Generous mobile gap */
+.gap-2 { gap: 12px !important; }
 .gap-2\.5 { gap: 14px !important; }
 .gap-3 { gap: 16px !important; }
 .gap-4 { gap: 20px !important; }
@@ -463,70 +414,68 @@ body {
 
 /* Color overrides */
 .text-white { color: #ffffff !important; }
-.text-blue-500 { color: #007aff !important; }
-.text-blue-600 { color: #0063d6 !important; }
-.text-rose-500 { color: #ff3b30 !important; }
-.text-amber-500 { color: #ff9500 !important; }
-.text-amber-600 { color: #d67d00 !important; }
-.text-emerald-500 { color: #34c759 !important; }
+.text-blue-500 { color: var(--siri-blue) !important; }
+.text-blue-600 { color: #0056b3 !important; }
+.text-rose-500 { color: var(--siri-pink) !important; }
+.text-amber-500 { color: var(--siri-orange) !important; }
+.text-amber-600 { color: #cc7a00 !important; }
+.text-emerald-500 { color: var(--siri-cyan) !important; }
 .text-slate-400 { color: #8e8e93 !important; }
 .text-slate-500 { color: #636366 !important; }
 .text-slate-600 { color: #48484a !important; }
 .text-slate-700 { color: #3a3a3c !important; }
 .text-slate-800 { color: #2c2c2e !important; }
 
-.bg-white\/40 { background-color: rgba(255, 255, 255, 0.4) !important; }
-.bg-white\/50 { background-color: rgba(255, 255, 255, 0.5) !important; }
-.bg-white\/60 { background-color: rgba(255, 255, 255, 0.6) !important; }
-.bg-white\/80 { background-color: rgba(255, 255, 255, 0.8) !important; }
-.bg-white\/90 { background-color: rgba(255, 255, 255, 0.9) !important; }
-.bg-blue-500\/10 { background-color: rgba(0, 122, 255, 0.1) !important; }
-.bg-blue-500\/15 { background-color: rgba(0, 122, 255, 0.15) !important; }
-.bg-blue-500\/20 { background-color: rgba(0, 122, 255, 0.2) !important; }
-.bg-amber-500\/5 { background-color: rgba(255, 149, 0, 0.05) !important; }
-.bg-amber-500\/10 { background-color: rgba(255, 149, 0, 0.1) !important; }
-.bg-emerald-500\/10 { background-color: rgba(52, 199, 89, 0.1) !important; }
-.bg-purple-500\/10 { background-color: rgba(175, 82, 222, 0.1) !important; }
-.bg-slate-300 { background-color: #d1d1d6 !important; }
-.bg-slate-400\/15 { background-color: rgba(142, 142, 147, 0.15) !important; }
+.bg-white\/40 { background-color: rgba(255, 255, 255, 0.04) !important; }
+.bg-white\/50 { background-color: rgba(255, 255, 255, 0.06) !important; }
+.bg-white\/60 { background-color: rgba(255, 255, 255, 0.08) !important; }
+.bg-white\/80 { background-color: rgba(255, 255, 255, 0.12) !important; }
+.bg-white\/90 { background-color: rgba(255, 255, 255, 0.15) !important; }
+.bg-blue-500\/10 { background-color: rgba(10, 132, 255, 0.1) !important; }
+.bg-blue-500\/15 { background-color: rgba(10, 132, 255, 0.15) !important; }
+.bg-blue-500\/20 { background-color: rgba(10, 132, 255, 0.2) !important; }
+.bg-amber-500\/5 { background-color: rgba(255, 159, 10, 0.05) !important; }
+.bg-amber-500\/10 { background-color: rgba(255, 159, 10, 0.1) !important; }
+.bg-emerald-500\/10 { background-color: rgba(48, 209, 88, 0.1) !important; }
+.bg-purple-500\/10 { background-color: rgba(191, 90, 242, 0.1) !important; }
+.bg-slate-300 { background-color: #3a3a3c !important; }
+.bg-slate-400\/15 { background-color: rgba(142, 142, 147, 0.1) !important; }
 .bg-slate-500\/5 { background-color: rgba(99, 99, 102, 0.05) !important; }
-.bg-rose-500\/10 { background-color: rgba(255, 59, 48, 0.1) !important; }
+.bg-rose-500\/10 { background-color: rgba(255, 55, 95, 0.1) !important; }
 
-@media (prefers-color-scheme: dark) {
-  .dark\:text-white { color: #ffffff !important; }
-  .dark\:text-blue-400 { color: #0a84ff !important; }
-  .dark\:text-slate-200 { color: #e5e5ea !important; }
-  .dark\:text-slate-300 { color: #d1d1d6 !important; }
-  .dark\:text-slate-400 { color: #8e8e93 !important; }
-  .dark\:text-slate-500 { color: #636366 !important; }
-  
-  .dark\:bg-black\/20 { background-color: rgba(0, 0, 0, 0.2) !important; }
-  .dark\:bg-black\/30 { background-color: rgba(0, 0, 0, 0.3) !important; }
-  .dark\:bg-black\/40 { background-color: rgba(0, 0, 0, 0.4) !important; }
-  .dark\:bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
-  .dark\:bg-black\/70 { background-color: rgba(0, 0, 0, 0.7) !important; }
-  .dark\:bg-black\/80 { background-color: rgba(0, 0, 0, 0.8) !important; }
-  .dark\:bg-slate-800 { background-color: #1c1c1e !important; }
-}
+.dark\:text-white { color: #ffffff !important; }
+.dark\:text-blue-400 { color: var(--siri-blue) !important; }
+.dark\:text-slate-200 { color: #e5e5ea !important; }
+.dark\:text-slate-300 { color: #d1d1d6 !important; }
+.dark\:text-slate-400 { color: #8e8e93 !important; }
+.dark\:text-slate-500 { color: #636366 !important; }
+
+.dark\:bg-black\/20 { background-color: rgba(0, 0, 0, 0.2) !important; }
+.dark\:bg-black\/30 { background-color: rgba(0, 0, 0, 0.3) !important; }
+.dark\:bg-black\/40 { background-color: rgba(0, 0, 0, 0.4) !important; }
+.dark\:bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
+.dark\:bg-black\/70 { background-color: rgba(0, 0, 0, 0.7) !important; }
+.dark\:bg-black\/80 { background-color: rgba(0, 0, 0, 0.8) !important; }
+.dark\:bg-slate-800 { background-color: #1c1c1e !important; }
 
 /* Border styles */
-.border { border-style: solid !important; border-width: 1px !important; }
-.border-2 { border-style: solid !important; border-width: 2px !important; }
+.border { border: 1px solid var(--apple-border) !important; }
+.border-2 { border: 2px solid var(--apple-border) !important; }
 .border-transparent { border-color: transparent !important; }
 .border-white\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
 .border-white\/20 { border-color: rgba(255, 255, 255, 0.2) !important; }
 .border-white\/30 { border-color: rgba(255, 255, 255, 0.3) !important; }
 .border-white\/40 { border-color: rgba(255, 255, 255, 0.4) !important; }
-.border-blue-500 { border-color: #007aff !important; }
-.border-blue-500\/20 { border-color: rgba(0, 122, 255, 0.2) !important; }
-.border-blue-500\/30 { border-color: rgba(0, 122, 255, 0.3) !important; }
-.border-amber-500\/20 { border-color: rgba(255, 149, 0, 0.2) !important; }
-.border-amber-500\/30 { border-color: rgba(255, 149, 0, 0.3) !important; }
+.border-blue-500 { border-color: var(--siri-blue) !important; }
+.border-blue-500\/20 { border-color: rgba(10, 132, 255, 0.2) !important; }
+.border-blue-500\/30 { border-color: rgba(10, 132, 255, 0.3) !important; }
+.border-amber-500\/20 { border-color: rgba(255, 159, 10, 0.2) !important; }
+.border-amber-500\/30 { border-color: rgba(255, 159, 10, 0.3) !important; }
 
 /* Rounded corners */
 .rounded-lg { border-radius: 12px !important; }
-.rounded-xl { border-radius: 16px !important; }
-.rounded-2xl { border-radius: 20px !important; }
+.rounded-xl { border-radius: 18px !important; }
+.rounded-2xl { border-radius: 24px !important; }
 .rounded-full { border-radius: 9999px !important; }
 
 /* Shadows */
@@ -551,4 +500,4 @@ body {
 }
 
 .overflow-y-auto { overflow-y: auto !important; }
-.overflow-hidden { overflow-hidden: hidden !important; }
+.overflow-hidden { overflow: hidden !important; }
