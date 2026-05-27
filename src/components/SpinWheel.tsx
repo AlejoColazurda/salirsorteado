@@ -349,7 +349,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         <div 
           className="absolute z-30" 
           style={{
-            top: '-14px',
+            top: '-26px',
             left: '50%',
             transform: 'translateX(-50%)',
             filter: 'drop-shadow(0 6px 12px rgba(255, 59, 48, 0.5))',
