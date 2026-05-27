@@ -19,6 +19,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   const [isSpinning, setIsSpinning] = useState(false);
   const [winner, setWinner] = useState<{ name: string; role: string } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [pointerFlick, setPointerFlick] = useState(false);
 
   // Audio Context for synthetic haptic tick sounds
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -249,6 +250,10 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
           // Pitch changes slightly depending on speed
           playTickSound(Math.min(1.5, 0.6 + angularVelocityRef.current * 3));
           lastTickAngleRef.current = currentProgress;
+          
+          // Visual needle click/flick animation
+          setPointerFlick(true);
+          setTimeout(() => setPointerFlick(false), 50);
         }
 
         drawWheel();
@@ -275,16 +280,13 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   const determineWinner = () => {
     if (participants.length === 0) return;
 
-    // Normalise angle to [0, 2*PI]
-    const normalizedAngle = (rotationRef.current % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-    
-    // The selector is at the 3 o'clock position (0 radians on canvas)
-    // To make it point from the top (12 o'clock, which is -Math.PI/2), we calculate:
-    const targetAngle = (2 * Math.PI - normalizedAngle - Math.PI / 2) % (2 * Math.PI);
+    // Normalise angle pointing at 12 o'clock (1.5 * Math.PI) on the rotated wheel
+    let targetAngle = (1.5 * Math.PI - rotationRef.current) % (2 * Math.PI);
+    if (targetAngle < 0) {
+      targetAngle += 2 * Math.PI;
+    }
     const sectorAngle = (2 * Math.PI) / participants.length;
-    let index = Math.floor(targetAngle / sectorAngle);
-    if (index < 0) index += participants.length;
-    index = index % participants.length;
+    const index = Math.floor(targetAngle / sectorAngle) % participants.length;
 
     const winnerName = participants[index];
 
@@ -345,13 +347,14 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         {/* CSS 3D Glassliquid container border shadow */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-white/40 dark:from-white/5 dark:to-white/10 border border-white/30 dark:border-white/10 shadow-[inset_0_4px_16px_rgba(255,255,255,0.4),0_24px_48px_-12px_rgba(0,0,0,0.15)] pointer-events-none" />
         
-        {/* Sleek fixed arrow pointing down from the top */}
         <div 
           className="absolute z-30" 
           style={{
             top: '-26px',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: pointerFlick ? 'translateX(-50%) rotate(-18deg)' : 'translateX(-50%) rotate(0deg)',
+            transformOrigin: '50% 0%',
+            transition: pointerFlick ? 'none' : 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             filter: 'drop-shadow(0 6px 12px rgba(255, 59, 48, 0.5))',
             pointerEvents: 'none'
           }}
