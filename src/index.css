@@ -476,7 +476,17 @@ body {
 .rounded-lg { border-radius: 12px !important; }
 .rounded-xl { border-radius: 18px !important; }
 .rounded-2xl { border-radius: 24px !important; }
-.rounded-full { border-radius: 9999px !important; }
+.rounded-full { 
+  border-radius: 9999px !important; 
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 100% !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.25 !important;
+}
 
 /* Shadows */
 .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
