@@ -106,97 +106,124 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = canvas.width;
+    // Retina support scaling
+    const dpr = window.devicePixelRatio || 1;
+    const size = 350; // logical size
+    
+    if (canvas.width !== size * dpr || canvas.height !== size * dpr) {
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+    }
+    
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, size, size);
+
     const center = size / 2;
     const radius = center - 16;
-
-    ctx.clearRect(0, 0, size, size);
 
     const items = participants.length > 0 ? participants : ['Ingresa nombres'];
     const sliceAngle = (2 * Math.PI) / items.length;
 
-    // Draw background outer ring
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    // 1. Draw background outer liquid ring
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
     ctx.beginPath();
     ctx.arc(center, center, radius + 8, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.stroke();
-    ctx.shadowBlur = 0; // reset shadow
+    ctx.restore(); // Clear shadow blur for segments
 
+    // 2. Draw Wheel Segments
     items.forEach((item, i) => {
+      ctx.save();
+      ctx.scale(dpr, dpr);
       const angle = rotationRef.current + i * sliceAngle;
 
-      // Draw segment path
+      // Draw segment slice
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.arc(center, center, radius, angle, angle + sliceAngle);
       ctx.closePath();
 
-      // Glassy colorful gradient fill
-      const grad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+      // Glassy gradient
+      const grad = ctx.createRadialGradient(center, center, center * 0.1, center, center, radius);
       const baseColor = segmentColors[i % segmentColors.length];
-      grad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-      grad.addColorStop(1, baseColor);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+      grad.addColorStop(0.5, baseColor + 'bb'); // semi transparent neon color
+      grad.addColorStop(1, baseColor); // solid color at boundary
 
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Border lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      // Translucent borders (simulating glass edge refraction)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Draw names text
-      ctx.save();
+      // 3. Draw text label
       ctx.translate(center, center);
       ctx.rotate(angle + sliceAngle / 2);
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
 
-      // Drop shadow for text readability
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      // Text Shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Outfit", sans-serif';
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Outfit", sans-serif';
       
       const truncatedText = item.length > 14 ? item.substring(0, 12) + '..' : item;
-      ctx.fillText(truncatedText, radius - 20, 0);
+      ctx.fillText(truncatedText, radius - 24, 0);
       ctx.restore();
     });
 
-    // Draw central glossy pin hub
+    // 4. Draw central glossy glass pin hub
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    
+    // Outer glass bubble shadow
     ctx.beginPath();
-    ctx.arc(center, center, 32, 0, 2 * Math.PI);
-    const centerGrad = ctx.createRadialGradient(center, center, 0, center, center, 32);
-    centerGrad.addColorStop(0, '#ffffff');
-    centerGrad.addColorStop(1, '#e5e5ea');
-    ctx.fillStyle = centerGrad;
-    ctx.shadowColor = 'rgba(0,0,0,0.2)';
-    ctx.shadowBlur = 10;
-    ctx.fill();
-    ctx.shadowBlur = 0; // reset
-
-    // Draw inner logo circle (glass)
-    ctx.beginPath();
-    ctx.arc(center, center, 24, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(0, 122, 255, 0.1)';
-    ctx.strokeStyle = 'rgba(0, 122, 255, 0.3)';
-    ctx.lineWidth = 2;
+    ctx.arc(center, center, 34, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1.5;
     ctx.fill();
     ctx.stroke();
+    
+    // Core white glossy cap
+    ctx.beginPath();
+    ctx.arc(center, center, 26, 0, 2 * Math.PI);
+    const centerGrad = ctx.createRadialGradient(center - 6, center - 6, 2, center, center, 26);
+    centerGrad.addColorStop(0, '#ffffff');
+    centerGrad.addColorStop(0.5, '#f5f5f7');
+    centerGrad.addColorStop(1, '#d1d1d6');
+    ctx.fillStyle = centerGrad;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.16)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    ctx.fill();
+    ctx.restore();
 
-    // Center icon/decoration (inner dot)
+    // Center metallic pointer dot
+    ctx.save();
+    ctx.scale(dpr, dpr);
     ctx.beginPath();
     ctx.arc(center, center, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#007aff';
+    const innerGrad = ctx.createRadialGradient(center - 2, center - 2, 1, center, center, 8);
+    innerGrad.addColorStop(0, '#007aff');
+    innerGrad.addColorStop(1, '#0040dd');
+    ctx.fillStyle = innerGrad;
     ctx.fill();
+    ctx.restore();
   };
 
   // Spin animation loop

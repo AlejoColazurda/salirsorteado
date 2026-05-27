@@ -54,7 +54,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   };
 
   const handleNextStep = () => {
-    if (step === 1 && activeParticipants.length < 2) return;
+    if (step === 1 && activeParticipants.length < 1) return;
     setStep((prev) => (prev + 1) as any);
   };
 
@@ -168,27 +168,37 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
                 No hay participantes cargados. ¡Agrega tu grupo!
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {participants.map((p) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 border ${
+                    className={`flex items-center justify-between p-3.5 rounded-2xl transition-all duration-300 border ${
                       p.active
-                        ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400'
+                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'bg-slate-500/5 border-transparent text-slate-400 dark:text-slate-600'
                     }`}
                   >
                     <button
                       type="button"
                       onClick={() => onToggleParticipant(p.id)}
-                      className="flex-1 flex items-center gap-3 font-semibold text-left ios-clickable"
+                      className="flex-1 flex items-center gap-3.5 font-bold text-left ios-clickable"
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         p.active ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 dark:border-slate-700'
                       }`}>
-                        {p.active && <Check size={12} />}
+                        {p.active && <Check size={14} />}
                       </div>
-                      <span className={p.active ? 'text-slate-800 dark:text-slate-200 font-bold' : ''}>
+
+                      {/* Premium initials avatar */}
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-inner transition-all ${
+                        p.active 
+                          ? 'bg-gradient-to-tr from-blue-500 to-indigo-600 scale-105 shadow-[0_4px_12px_rgba(0,122,255,0.25)]' 
+                          : 'bg-slate-300 dark:bg-slate-800'
+                      }`}>
+                        {p.name.charAt(0).toUpperCase()}
+                      </div>
+
+                      <span className={p.active ? 'text-slate-800 dark:text-slate-200' : 'font-normal opacity-60'}>
                         {p.name}
                       </span>
                     </button>
@@ -196,7 +206,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
                     <button
                       type="button"
                       onClick={() => onRemoveParticipant(p.id)}
-                      className="p-1 text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-colors"
+                      className="p-2 text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-all"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -209,9 +219,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           <div className="flex justify-end mt-4">
             <button
               onClick={handleNextStep}
-              disabled={activeParticipants.length < 2}
+              disabled={activeParticipants.length < 1}
               className={`ios-button-primary ios-clickable w-full py-3 ${
-                activeParticipants.length < 2 ? 'opacity-50 cursor-not-allowed' : ''
+                activeParticipants.length < 1 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               <span>Continuar ({activeParticipants.length} listos)</span>
