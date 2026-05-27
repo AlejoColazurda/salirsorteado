@@ -356,7 +356,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
   };
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
-    if (participants.length === 0) return;
+    if (participants.length === 0 || winner !== null || isSpinning) return;
     
     const coords = getCoordinatesFromEvent(e);
     if (!coords) return;
@@ -474,7 +474,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
         <div 
           className="absolute z-30" 
           style={{
-            top: '-26px',
+            top: '6px',
             left: '50%',
             transform: pointerFlick ? 'translateX(-50%) rotate(-18deg)' : 'translateX(-50%) rotate(0deg)',
             transformOrigin: '50% 0%',
