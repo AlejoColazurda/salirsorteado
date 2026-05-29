@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { notifyDraw, requestNotificationPermission } from '../notifications';
 
 interface SpinWheelProps {
   participants: string[];
@@ -339,7 +340,10 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
     const results = [{ participantName: winnerName, role: primaryRole }];
     setWinner({ name: winnerName, role: primaryRole });
-    
+
+    // Alert the whole room with a browser notification (runs on every client)
+    notifyDraw(winnerName, primaryRole);
+
     // Trigger confetti
     confetti({
       particleCount: 120,
@@ -354,8 +358,9 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
 
   const handleSpinStart = () => {
     if (isSpinning || participants.length === 0 || (isMultiplayer && !canISpin)) return;
-    
+
     getAudioContext();
+    requestNotificationPermission();
     setWinner(null);
     setIsSpinning(true);
     
@@ -402,6 +407,7 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
     if (!coords) return;
 
     getAudioContext();
+    requestNotificationPermission();
     setWinner(null);
 
     // Stop active spins on drag
@@ -523,69 +529,94 @@ export const SpinWheel: React.FC<SpinWheelProps> = ({
       </div>
 
       {/* Canvas container with pointer indicator */}
-      <div className="relative flex items-center justify-center p-4 w-full max-w-[350px] mx-auto">
-        {/* CSS 3D Glassliquid container border shadow */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 to-white/40 dark:from-white/5 dark:to-white/10 border border-white/30 dark:border-white/10 shadow-[inset_0_4px_16px_rgba(255,255,255,0.4),0_24px_48px_-12px_rgba(0,0,0,0.15)] pointer-events-none" />
-        
-        {/* Sleek fixed arrow pointing down from the top */}
-        <div 
-          className="absolute z-30" 
-          style={{
-            top: '8px',
-            left: '50%',
-            transform: pointerFlick ? 'translateX(-50%) rotate(-18deg)' : 'translateX(-50%) rotate(0deg)',
-            transformOrigin: '50% 0%',
-            transition: pointerFlick ? 'none' : 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            filter: 'drop-shadow(0 6px 12px rgba(255, 59, 48, 0.5))',
-            pointerEvents: 'none'
-          }}
-        >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 21L3 9H9V3H15V9H21L12 21Z" fill="url(#pointer-gradient)" stroke="#ffffff" strokeWidth="2.5" strokeLinejoin="round"/>
-            <defs>
-              <linearGradient id="pointer-gradient" x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#ff453a" />
-                <stop offset="1" stopColor="#ff2d55" />
-              </linearGradient>
-            </defs>
-          </svg>
+      <div className="flex items-center justify-center p-4 w-full max-w-[350px] mx-auto">
+        {/* Wheel wrapper: sized to the canvas so overlays track it when the canvas scales */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '350px' }}>
+          {/* CSS 3D Glassliquid ring around the wheel */}
+          <div
+            className="rounded-full"
+            style={{
+              position: 'absolute',
+              inset: '-8px',
+              background: 'linear-gradient(to top right, rgba(255,255,255,0.10), rgba(255,255,255,0.30))',
+              border: '1px solid rgba(255,255,255,0.20)',
+              boxShadow: 'inset 0 4px 16px rgba(255,255,255,0.35), 0 24px 48px -12px rgba(0,0,0,0.45)',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
+
+          {/* Sleek fixed arrow pointing down, anchored to the wheel's top-center */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-16px',
+              left: '50%',
+              zIndex: 30,
+              transform: pointerFlick ? 'translateX(-50%) rotate(-18deg)' : 'translateX(-50%) rotate(0deg)',
+              transformOrigin: '50% 0%',
+              transition: pointerFlick ? 'none' : 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              filter: 'drop-shadow(0 6px 12px rgba(255, 59, 48, 0.5))',
+              pointerEvents: 'none',
+            }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 21L3 9H9V3H15V9H21L12 21Z" fill="url(#pointer-gradient)" stroke="#ffffff" strokeWidth="2.5" strokeLinejoin="round"/>
+              <defs>
+                <linearGradient id="pointer-gradient" x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#ff453a" />
+                  <stop offset="1" stopColor="#ff2d55" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <canvas
+            ref={canvasRef}
+            width={350}
+            height={350}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: 'auto',
+              position: 'relative',
+              zIndex: 10,
+              touchAction: 'none',
+              cursor: 'grab',
+            }}
+            onMouseDown={startDrag}
+            onMouseMove={moveDrag}
+            onMouseUp={endDrag}
+            onMouseLeave={endDrag}
+            onTouchStart={startDrag}
+            onTouchMove={moveDrag}
+            onTouchEnd={endDrag}
+          />
+
+          {/* Floating Center Spin Button (centered on the wheel) */}
+          <button
+            disabled={isSpinning || participants.length === 0}
+            onClick={handleSpinStart}
+            className="rounded-full ios-clickable flex items-center justify-center font-bold text-xs shadow-xl border border-white/40 bg-white/90 text-blue-600 dark:bg-black/80 dark:text-blue-400"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 20,
+              width: '64px',
+              height: '64px',
+              cursor: isSpinning || participants.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: isSpinning || participants.length === 0 ? 0.6 : 1,
+            }}
+          >
+            {isSpinning ? (
+              <RefreshCw className="animate-spin" size={24} />
+            ) : (
+              'GIRAR'
+            )}
+          </button>
         </div>
-
-        <canvas
-          ref={canvasRef}
-          width={350}
-          height={350}
-          className="relative z-10 transition-transform cursor-grab active:cursor-grabbing"
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-            touchAction: 'none',
-          }}
-          onMouseDown={startDrag}
-          onMouseMove={moveDrag}
-          onMouseUp={endDrag}
-          onMouseLeave={endDrag}
-          onTouchStart={startDrag}
-          onTouchMove={moveDrag}
-          onTouchEnd={endDrag}
-        />
-
-        {/* Floating Center Spin Button */}
-        <button
-          disabled={isSpinning || participants.length === 0}
-          onClick={handleSpinStart}
-          className={`absolute z-20 w-16 h-16 rounded-full ios-clickable flex items-center justify-center font-bold text-xs shadow-xl transition-all duration-300 border border-white/40 ${
-            isSpinning || participants.length === 0
-              ? 'bg-slate-300/80 text-slate-500 cursor-not-allowed'
-              : 'bg-white/90 text-blue-600 dark:bg-black/80 dark:text-blue-400 hover:scale-105 active:scale-95'
-          }`}
-        >
-          {isSpinning ? (
-            <RefreshCw className="animate-spin" size={24} />
-          ) : (
-            'GIRAR'
-          )}
-        </button>
       </div>
 
       {/* Winner Display Panel */}

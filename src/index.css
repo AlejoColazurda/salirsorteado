@@ -561,3 +561,62 @@ body {
     opacity: 0;
   }
 }
+
+/* ==========================================
+   POSITIONING UTILITIES (Tailwind Emulation)
+   These were missing, so any absolute/relative/fixed/z/inset
+   class used in the JSX was a no-op and overlays rendered in flow.
+   ========================================== */
+
+/* Position */
+.relative { position: relative !important; }
+.absolute { position: absolute !important; }
+.fixed { position: fixed !important; }
+.sticky { position: sticky !important; }
+
+/* Inset / offsets */
+.inset-0 { top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important; }
+.top-0 { top: 0 !important; }
+.right-0 { right: 0 !important; }
+.bottom-0 { bottom: 0 !important; }
+.left-0 { left: 0 !important; }
+.top-1\/2 { top: 50% !important; }
+.left-1\/2 { left: 50% !important; }
+.bottom-24 { bottom: 96px !important; }
+.right-4 { right: 16px !important; }
+.top-\[2px\] { top: 2px !important; }
+.left-\[2px\] { left: 2px !important; }
+.-top-10 { top: -40px !important; }
+.-left-10 { left: -40px !important; }
+.-bottom-10 { bottom: -40px !important; }
+.-right-10 { right: -40px !important; }
+
+/* Centering transforms */
+.-translate-y-1\/2 { transform: translateY(-50%) !important; }
+.-translate-x-1\/2 { transform: translateX(-50%) !important; }
+
+/* z-index */
+.z-0 { z-index: 0 !important; }
+.z-10 { z-index: 10 !important; }
+.z-\[999\] { z-index: 999 !important; }
+.z-\[9999\] { z-index: 9999 !important; }
+
+/* Misc layout helpers */
+.pointer-events-none { pointer-events: none !important; }
+.h-0\.5 { height: 2px !important; }
+
+/* Soft blur glows */
+.blur-xl { filter: blur(24px) !important; }
+.blur-2xl { filter: blur(40px) !important; }
+.backdrop-blur-md {
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Fade-in entrance */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in,
+.animate-fade-in { animation: fadeIn 0.3s ease both; }

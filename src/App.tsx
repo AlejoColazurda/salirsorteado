@@ -8,6 +8,7 @@ import { MultiplayerLobby } from './components/multiplayer/MultiplayerLobby';
 import { ActiveSession } from './components/draw/ActiveSession';
 import { useDrawSession } from './hooks/useDrawSession';
 import { useMultiplayerRoom } from './hooks/useMultiplayerRoom';
+import { requestNotificationPermission } from './notifications';
 import { Users } from 'lucide-react';
 
 export default function App() {
@@ -50,7 +51,10 @@ export default function App() {
             setMyName={room.setMyName}
             myAvatar={room.myAvatar}
             setMyAvatar={room.setMyAvatar}
-            onJoinLobby={() => room.setHasJoinedLobby(true)}
+            onJoinLobby={() => {
+              requestNotificationPermission();
+              room.setHasJoinedLobby(true);
+            }}
             roomMembers={room.roomMembers}
             roomAdminId={room.roomAdminId}
             myMemberId={room.myMemberId}
@@ -117,6 +121,7 @@ export default function App() {
                   }}
                   onStartGame={(finalConfig) => {
                     if (room.isMultiplayer && room.roomAdminId !== room.myMemberId) return; // Only Admin starts
+                    requestNotificationPermission();
                     draw.handleStartGame(finalConfig);
                     if (room.isMultiplayer) {
                       setTimeout(() => room.syncLobbyState({ sessionActive: true, selectedConfigId: finalConfig.id }), 100);
