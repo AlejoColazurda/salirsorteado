@@ -5,6 +5,7 @@ import { HistoryManager } from './components/HistoryManager';
 import { Header } from './components/common/Header';
 import { TabBar } from './components/common/TabBar';
 import { MultiplayerLobby } from './components/multiplayer/MultiplayerLobby';
+import { CreateRoomCard } from './components/multiplayer/CreateRoomCard';
 import { ActiveSession } from './components/draw/ActiveSession';
 import { useDrawSession } from './hooks/useDrawSession';
 import { useMultiplayerRoom } from './hooks/useMultiplayerRoom';
@@ -97,8 +98,20 @@ export default function App() {
                   </p>
                 </div>
               ) : (
-                // Setup panel wizard
-                <SetupWizard
+                // Setup panel wizard (local) — with the "play with friends" entry point
+                <>
+                  {!room.isMultiplayer && (
+                    <CreateRoomCard
+                      isConfigured={room.dbConnected}
+                      myName={room.myName}
+                      setMyName={room.setMyName}
+                      myAvatar={room.myAvatar}
+                      setMyAvatar={room.setMyAvatar}
+                      onCreateRoom={room.handleCreateRoom}
+                      onGoToSettings={() => setActiveTab('configs')}
+                    />
+                  )}
+                  <SetupWizard
                   participants={draw.participants}
                   onAddParticipant={draw.handleAddParticipant}
                   onToggleParticipant={draw.handleToggleParticipant}
@@ -127,9 +140,10 @@ export default function App() {
                       setTimeout(() => room.syncLobbyState({ sessionActive: true, selectedConfigId: finalConfig.id }), 100);
                     }
                   }}
-                  isMultiplayer={room.isMultiplayer}
-                  roomMembers={room.roomMembers}
-                />
+                    isMultiplayer={room.isMultiplayer}
+                    roomMembers={room.roomMembers}
+                  />
+                </>
               )
             ) : (
               // Active Sorteo Wheel panel
