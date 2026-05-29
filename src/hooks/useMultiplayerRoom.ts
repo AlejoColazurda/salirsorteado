@@ -6,6 +6,7 @@ import type { HistoryEntry } from '../components/HistoryManager';
 interface Member {
   id: string;
   name: string;
+  avatar: string;
   isSpinner: boolean;
   isAdmin: boolean;
 }
@@ -41,6 +42,8 @@ export const useMultiplayerRoom = (draw: DrawState) => {
   const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [myMemberId] = useState(() => `user-${Math.random().toString(36).substring(2, 9)}`);
   const [myName, setMyName] = useState(() => localStorage.getItem('multiplayer_name') || '');
+  const [myAvatar, setMyAvatar] = useState(() => localStorage.getItem('multiplayer_avatar') || '😀');
+  const [activeReactions, setActiveReactions] = useState<{ id: string; emoji: string; left: number }[]>([]);
   const [hasJoinedLobby, setHasJoinedLobby] = useState(false);
   const [roomMembers, setRoomMembers] = useState<Member[]>([]);
   const [roomAdminId, setRoomAdminId] = useState<string | null>(null);
@@ -112,7 +115,7 @@ export const useMultiplayerRoom = (draw: DrawState) => {
     setRoomCode(code);
     setIsMultiplayer(true);
     setRoomAdminId(myMemberId);
-    setRoomMembers([{ id: myMemberId, name: myName.trim(), isSpinner: true, isAdmin: true }]);
+    setRoomMembers([{ id: myMemberId, name: myName.trim(), avatar: myAvatar, isSpinner: true, isAdmin: true }]);
     setHasJoinedLobby(true);
   };
 
@@ -175,7 +178,7 @@ export const useMultiplayerRoom = (draw: DrawState) => {
         if (roomAdminId === myMemberId) {
           setRoomMembers((prev) => {
             if (prev.some((m) => m.id === payload.id)) return prev;
-            const updated = [...prev, { id: payload.id, name: payload.name, isSpinner: false, isAdmin: false }];
+            const updated = [...prev, { id: payload.id, name: payload.name, avatar: payload.avatar || '😀', isSpinner: false, isAdmin: false }];
             
             // Broadcast lobby state update to everyone
             channel.send({
@@ -217,6 +220,14 @@ export const useMultiplayerRoom = (draw: DrawState) => {
         });
         window.dispatchEvent(spinEvent);
       })
+      .on('broadcast', { event: 'reaction' }, ({ payload }: any) => {
+        const id = Math.random().toString(36).substring(2, 9);
+        const left = Math.floor(Math.random() * 80) + 10;
+        setActiveReactions((prev) => [...prev, { id, emoji: payload.emoji, left }]);
+        setTimeout(() => {
+          setActiveReactions((prev) => prev.filter((r) => r.id !== id));
+        }, 2000);
+      })
       .on('broadcast', { event: 'reset_game' }, () => {
         draw.setSessionResults([]);
         draw.setSessionWinners([]);
@@ -229,7 +240,7 @@ export const useMultiplayerRoom = (draw: DrawState) => {
         channel.send({
           type: 'broadcast',
           event: 'join_request',
-          payload: { id: myMemberId, name: myName },
+          payload: { id: myMemberId, name: myName, avatar: myAvatar },
         });
       }
     });
@@ -238,7 +249,7 @@ export const useMultiplayerRoom = (draw: DrawState) => {
       channel.unsubscribe();
       supabaseChannelRef.current = null;
     };
-  }, [isMultiplayer, roomCode, hasJoinedLobby, myName]);
+  }, [isMultiplayer, roomCode, hasJoinedLobby, myName, myAvatar]);
 
   // Handle spin end specifically in multiplayer (syncs state)
   const handleMultiplayerSpinEnd = (results: { participantName: string; role: string }[]) => {
@@ -303,6 +314,16 @@ export const useMultiplayerRoom = (draw: DrawState) => {
     setTimeout(() => syncLobbyState({ sessionCompleted: false, sessionWinners: [], sessionResults: [] }), 100);
   };
 
+  const sendReaction = (emoji: string) => {
+    if (supabaseChannelRef.current) {
+      supabaseChannelRef.current.send({
+        type: 'broadcast',
+        event: 'reaction',
+        payload: { emoji },
+      });
+    }
+  };
+
   return {
     dbUrl,
     setDbUrl,
@@ -318,6 +339,10 @@ export const useMultiplayerRoom = (draw: DrawState) => {
     myMemberId,
     myName,
     setMyName,
+    myAvatar,
+    setMyAvatar,
+    activeReactions,
+    sendReaction,
     hasJoinedLobby,
     setHasJoinedLobby,
     roomMembers,

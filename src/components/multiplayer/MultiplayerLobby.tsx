@@ -4,15 +4,20 @@ import { Users, LogOut, Link2 } from 'lucide-react';
 interface Member {
   id: string;
   name: string;
+  avatar: string;
   isSpinner: boolean;
   isAdmin: boolean;
 }
+
+const AVATARS = ['😀', '🦊', '🦁', '🐸', '🐼', '🦄', '🐨', '👻', '🤖', '👑', '🍕', '🎉'];
 
 interface MultiplayerLobbyProps {
   roomCode: string | null;
   hasJoinedLobby: boolean;
   myName: string;
   setMyName: (name: string) => void;
+  myAvatar: string;
+  setMyAvatar: (avatar: string) => void;
   onJoinLobby: () => void;
   roomMembers: Member[];
   roomAdminId: string | null;
@@ -26,6 +31,8 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   hasJoinedLobby,
   myName,
   setMyName,
+  myAvatar,
+  setMyAvatar,
   onJoinLobby,
   roomMembers,
   roomAdminId,
@@ -63,6 +70,28 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
             }}
             className="ios-input font-bold"
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase text-left">Elige tu Avatar</span>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {AVATARS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  setMyAvatar(emoji);
+                  localStorage.setItem('multiplayer_avatar', emoji);
+                }}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-lg border transition-all ${
+                  myAvatar === emoji
+                    ? 'bg-blue-500/20 border-blue-500 scale-110 shadow-sm'
+                    : 'bg-white/40 border-white/10 dark:bg-black/20 hover:scale-105'
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
         </div>
         <button
           onClick={onJoinLobby}
@@ -130,7 +159,8 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               key={m.id}
               className="flex justify-between items-center p-2 rounded-xl bg-white/50 dark:bg-black/30 border border-white/5 text-xs"
             >
-              <span className="font-bold flex items-center gap-1">
+              <span className="font-bold flex items-center gap-1.5">
+                <span className="text-base">{m.avatar || '😀'}</span>
                 {m.name}
                 {m.id === roomAdminId && (
                   <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.2 rounded-full font-bold">

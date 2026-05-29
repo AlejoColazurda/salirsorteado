@@ -19,7 +19,7 @@ export default function App() {
 
   // Active names helper
   const activeParticipantNames = room.isMultiplayer
-    ? room.roomMembers.map((m) => m.name)
+    ? room.roomMembers.map((m) => `${m.avatar || '😀'} ${m.name}`)
     : draw.participants.filter((p) => p.active).map((p) => p.name);
 
   // Eligible participants for current spin
@@ -48,6 +48,8 @@ export default function App() {
             hasJoinedLobby={room.hasJoinedLobby}
             myName={room.myName}
             setMyName={room.setMyName}
+            myAvatar={room.myAvatar}
+            setMyAvatar={room.setMyAvatar}
             onJoinLobby={() => room.setHasJoinedLobby(true)}
             roomMembers={room.roomMembers}
             roomAdminId={room.roomAdminId}
@@ -65,6 +67,8 @@ export default function App() {
                 hasJoinedLobby={room.hasJoinedLobby}
                 myName={room.myName}
                 setMyName={room.setMyName}
+                myAvatar={room.myAvatar}
+                setMyAvatar={room.setMyAvatar}
                 onJoinLobby={() => {}}
                 roomMembers={room.roomMembers}
                 roomAdminId={room.roomAdminId}
@@ -243,6 +247,34 @@ export default function App() {
         roomAdminId={room.roomAdminId}
         myMemberId={room.myMemberId}
       />
+
+      {/* Floating Reactions overlay */}
+      <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
+        {room.activeReactions.map((r) => (
+          <div
+            key={r.id}
+            className="floating-reaction"
+            style={{ left: `${r.left}%` }}
+          >
+            {r.emoji}
+          </div>
+        ))}
+      </div>
+
+      {/* Reactions Bar for Multiplayer */}
+      {room.isMultiplayer && room.hasJoinedLobby && (
+        <div className="fixed bottom-24 right-4 z-[999] flex flex-col gap-2 bg-white/20 dark:bg-black/40 backdrop-blur-md border border-white/10 p-2.5 rounded-full shadow-2xl animate-fade-in">
+          {['😂', '🔥', '😭', '👏', '🎉'].map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => room.sendReaction(emoji)}
+              className="w-10 h-10 rounded-full bg-white/40 border border-white/10 dark:bg-black/20 hover:scale-125 transition-all text-xl flex items-center justify-center cursor-pointer active:scale-95"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
