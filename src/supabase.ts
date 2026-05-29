@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const getSupabaseClient = () => {
-  const localUrl = localStorage.getItem('supabase_url');
-  const localKey = localStorage.getItem('supabase_anon_key');
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const urlParam = params?.get('url');
+  const keyParam = params?.get('key');
+
+  const localUrl = urlParam || localStorage.getItem('supabase_url');
+  const localKey = keyParam || localStorage.getItem('supabase_anon_key');
   
   const supabaseUrl = localUrl || import.meta.env.VITE_SUPABASE_URL || '';
   const supabaseAnonKey = localKey || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -18,7 +22,11 @@ export const getSupabaseClient = () => {
 };
 
 export const isSupabaseConfigured = () => {
-  const localUrl = localStorage.getItem('supabase_url');
-  const localKey = localStorage.getItem('supabase_anon_key');
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const urlParam = params?.get('url');
+  const keyParam = params?.get('key');
+
+  const localUrl = urlParam || localStorage.getItem('supabase_url');
+  const localKey = keyParam || localStorage.getItem('supabase_anon_key');
   return !!((localUrl && localKey) || (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY));
 };

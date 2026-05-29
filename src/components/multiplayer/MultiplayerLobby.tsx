@@ -77,7 +77,19 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
   // View 2: Active Room Status Dashboard
   const handleCopyLink = () => {
-    const link = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    const localUrl = localStorage.getItem('supabase_url') || '';
+    const localKey = localStorage.getItem('supabase_anon_key') || '';
+    let link = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+    if (localUrl && localKey) {
+      link += `&url=${encodeURIComponent(localUrl)}&key=${encodeURIComponent(localKey)}`;
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const urlParam = params.get('url');
+      const keyParam = params.get('key');
+      if (urlParam && keyParam) {
+        link += `&url=${encodeURIComponent(urlParam)}&key=${encodeURIComponent(keyParam)}`;
+      }
+    }
     navigator.clipboard.writeText(link);
     alert('¡Enlace de invitación copiado al portapapeles!');
   };

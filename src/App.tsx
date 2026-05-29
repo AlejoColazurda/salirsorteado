@@ -8,6 +8,7 @@ import { MultiplayerLobby } from './components/multiplayer/MultiplayerLobby';
 import { ActiveSession } from './components/draw/ActiveSession';
 import { useDrawSession } from './hooks/useDrawSession';
 import { useMultiplayerRoom } from './hooks/useMultiplayerRoom';
+import { Users } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'draw' | 'configs' | 'history'>('draw');
@@ -74,36 +75,53 @@ export default function App() {
             )}
 
             {!draw.sessionActive ? (
-              // Setup panel wizard
-              <SetupWizard
-                participants={draw.participants}
-                onAddParticipant={draw.handleAddParticipant}
-                onToggleParticipant={draw.handleToggleParticipant}
-                onRemoveParticipant={draw.handleRemoveParticipant}
-                configs={draw.configs}
-                selectedConfigId={draw.selectedConfigId}
-                onSelectConfig={(id) => {
-                  draw.setSelectedConfigId(id);
-                  if (room.isMultiplayer && room.roomAdminId === room.myMemberId) {
-                    setTimeout(() => room.syncLobbyState({ selectedConfigId: id }), 100);
-                  }
-                }}
-                onCreateConfig={draw.handleCreateConfig}
-                allowRepeat={draw.allowRepeat}
-                onSetAllowRepeat={(val) => {
-                  draw.setAllowRepeat(val);
-                  if (room.isMultiplayer && room.roomAdminId === room.myMemberId) {
-                    setTimeout(() => room.syncLobbyState({ allowRepeat: val }), 100);
-                  }
-                }}
-                onStartGame={(finalConfig) => {
-                  if (room.isMultiplayer && room.roomAdminId !== room.myMemberId) return; // Only Admin starts
-                  draw.handleStartGame(finalConfig);
-                  if (room.isMultiplayer) {
-                    setTimeout(() => room.syncLobbyState({ sessionActive: true, selectedConfigId: finalConfig.id }), 100);
-                  }
-                }}
-              />
+              room.isMultiplayer && room.roomAdminId !== room.myMemberId ? (
+                // Waiting screen for guests
+                <div className="glass-panel p-6 bg-white/60 dark:bg-black/40 border-white/40 text-center flex flex-col gap-4 fade-in">
+                  <div className="animate-pulse flex flex-col items-center justify-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                      <Users size={24} />
+                    </div>
+                    <span className="font-bold text-slate-800 dark:text-white">Esperando al Administrador</span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    El creador de la sala está configurando el sorteo. En cuanto comience, verás la ruleta aquí. ¡Prepárate!
+                  </p>
+                </div>
+              ) : (
+                // Setup panel wizard
+                <SetupWizard
+                  participants={draw.participants}
+                  onAddParticipant={draw.handleAddParticipant}
+                  onToggleParticipant={draw.handleToggleParticipant}
+                  onRemoveParticipant={draw.handleRemoveParticipant}
+                  configs={draw.configs}
+                  selectedConfigId={draw.selectedConfigId}
+                  onSelectConfig={(id) => {
+                    draw.setSelectedConfigId(id);
+                    if (room.isMultiplayer && room.roomAdminId === room.myMemberId) {
+                      setTimeout(() => room.syncLobbyState({ selectedConfigId: id }), 100);
+                    }
+                  }}
+                  onCreateConfig={draw.handleCreateConfig}
+                  allowRepeat={draw.allowRepeat}
+                  onSetAllowRepeat={(val) => {
+                    draw.setAllowRepeat(val);
+                    if (room.isMultiplayer && room.roomAdminId === room.myMemberId) {
+                      setTimeout(() => room.syncLobbyState({ allowRepeat: val }), 100);
+                    }
+                  }}
+                  onStartGame={(finalConfig) => {
+                    if (room.isMultiplayer && room.roomAdminId !== room.myMemberId) return; // Only Admin starts
+                    draw.handleStartGame(finalConfig);
+                    if (room.isMultiplayer) {
+                      setTimeout(() => room.syncLobbyState({ sessionActive: true, selectedConfigId: finalConfig.id }), 100);
+                    }
+                  }}
+                  isMultiplayer={room.isMultiplayer}
+                  roomMembers={room.roomMembers}
+                />
+              )
             ) : (
               // Active Sorteo Wheel panel
               <ActiveSession

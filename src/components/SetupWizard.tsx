@@ -20,6 +20,8 @@ interface SetupWizardProps {
   allowRepeat: boolean;
   onSetAllowRepeat: (val: boolean) => void;
   onStartGame: (finalConfig: DrawConfig) => void;
+  isMultiplayer?: boolean;
+  roomMembers?: { id: string; name: string; isSpinner: boolean; isAdmin: boolean }[];
 }
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({
@@ -34,6 +36,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   allowRepeat,
   onSetAllowRepeat,
   onStartGame,
+  isMultiplayer = false,
+  roomMembers = [],
 }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [newParticipantName, setNewParticipantName] = useState('');
@@ -45,7 +49,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [hasMultipleDraws, setHasMultipleDraws] = useState<boolean>(true);
 
-  const activeParticipants = participants.filter((p) => p.active);
+  const activeParticipants = isMultiplayer
+    ? roomMembers.map((m) => ({ id: m.id, name: m.name, active: true }))
+    : participants.filter((p) => p.active);
 
   const handleAddParticipantSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +140,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
         ))}
       </div>
 
-      {/* Step Contents */}
       {step === 1 && (
         <div className="flex flex-col gap-5 fade-in">
           <div className="text-center">
@@ -142,80 +147,99 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               <Users className="text-blue-500" size={24} />
               ¿Quiénes juegan hoy?
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Ingresa los nombres y selecciona los que participarán en el sorteo (mínimo 2).
-            </p>
-          </div>
-
-          <form onSubmit={handleAddParticipantSubmit} className="flex gap-2">
-            <div className="ios-input-group flex-1">
-              <input
-                type="text"
-                placeholder="Ingresa un nombre..."
-                value={newParticipantName}
-                onChange={(e) => setNewParticipantName(e.target.value)}
-                className="ios-input"
-              />
-            </div>
-            <button type="submit" className="ios-button-primary ios-clickable p-3">
-              <Plus size={20} />
-            </button>
-          </form>
-
-          {/* Participant Grid / Scrollable Cards */}
-          <div className="glass-panel max-h-[300px] overflow-y-auto p-2 bg-white/40 dark:bg-black/20">
-            {participants.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-sm">
-                No hay participantes cargados. ¡Agrega tu grupo!
-              </div>
+            {isMultiplayer ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Modo Multijugador: Los participantes se unen ingresando al link de invitación. Los miembros conectados aparecerán arriba.
+              </p>
             ) : (
-              <div className="flex flex-col gap-2.5">
-                {participants.map((p) => (
-                  <div
-                    key={p.id}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl transition-all duration-300 border ${
-                      p.active
-                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400 shadow-sm'
-                        : 'bg-slate-500/5 border-transparent text-slate-400 dark:text-slate-600'
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onToggleParticipant(p.id)}
-                      className="flex-1 flex items-center gap-3.5 font-bold text-left ios-clickable"
-                    >
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        p.active ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 dark:border-slate-700'
-                      }`}>
-                        {p.active && <Check size={14} />}
-                      </div>
-
-                      {/* Premium initials avatar */}
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-inner transition-all ${
-                        p.active 
-                          ? 'bg-gradient-to-tr from-blue-500 to-indigo-600 scale-105 shadow-[0_4px_12px_rgba(0,122,255,0.25)]' 
-                          : 'bg-slate-300 dark:bg-slate-800'
-                      }`}>
-                        {p.name.charAt(0).toUpperCase()}
-                      </div>
-
-                      <span className={p.active ? 'text-slate-800 dark:text-slate-200' : 'font-normal opacity-60'}>
-                        {p.name}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => onRemoveParticipant(p.id)}
-                      className="p-2 text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Ingresa los nombres y selecciona los que participarán en el sorteo (mínimo 2).
+              </p>
             )}
           </div>
+
+          {isMultiplayer ? (
+            <div className="glass-panel p-5 bg-blue-500/5 border-blue-500/20 text-center flex flex-col gap-3">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                ¡Comparte el link para que se unan con su nombre!
+              </span>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Los participantes que ingresen a la sala a través del link se registrarán automáticamente para la ronda.
+              </p>
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleAddParticipantSubmit} className="flex gap-2">
+                <div className="ios-input-group flex-1">
+                  <input
+                    type="text"
+                    placeholder="Ingresa un nombre..."
+                    value={newParticipantName}
+                    onChange={(e) => setNewParticipantName(e.target.value)}
+                    className="ios-input"
+                  />
+                </div>
+                <button type="submit" className="ios-button-primary ios-clickable p-3">
+                  <Plus size={20} />
+                </button>
+              </form>
+
+              {/* Participant Grid / Scrollable Cards */}
+              <div className="glass-panel max-h-[300px] overflow-y-auto p-2 bg-white/40 dark:bg-black/20">
+                {participants.length === 0 ? (
+                  <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-sm">
+                    No hay participantes cargados. ¡Agrega tu grupo!
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {participants.map((p) => (
+                      <div
+                        key={p.id}
+                        className={`flex items-center justify-between p-3.5 rounded-2xl transition-all duration-300 border ${
+                          p.active
+                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                            : 'bg-slate-500/5 border-transparent text-slate-400 dark:text-slate-600'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => onToggleParticipant(p.id)}
+                          className="flex-1 flex items-center gap-3.5 font-bold text-left ios-clickable"
+                        >
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            p.active ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 dark:border-slate-700'
+                          }`}>
+                            {p.active && <Check size={14} />}
+                          </div>
+
+                          {/* Premium initials avatar */}
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-inner transition-all ${
+                            p.active 
+                              ? 'bg-gradient-to-tr from-blue-500 to-indigo-600 scale-105 shadow-[0_4px_12px_rgba(0,122,255,0.25)]' 
+                              : 'bg-slate-300 dark:bg-slate-800'
+                          }`}>
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+
+                          <span className={p.active ? 'text-slate-800 dark:text-slate-200' : 'font-normal opacity-60'}>
+                            {p.name}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onRemoveParticipant(p.id)}
+                          className="p-2 text-rose-500/70 hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end mt-4">
             <button
